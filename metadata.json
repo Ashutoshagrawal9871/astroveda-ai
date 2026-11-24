@@ -1,0 +1,6 @@
+{
+  "name": "Jyotish AI",
+  "description": "Vedic Kundli birth charts, horoscopes, Panchang, Kundli matching, and Vedic AI Astrologer consultation with chat guidance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

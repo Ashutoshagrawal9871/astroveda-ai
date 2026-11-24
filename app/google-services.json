@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "442884132999",
+    "project_id": "jyotish-ai-509917",
+    "storage_bucket": "jyotish-ai-509917.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442884132999:android:7f1d6ed99b3b499b9fa822",
+        "android_client_info": {
+          "package_name": "com.aistudio.astrokundli.vxmjqa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "442884132999-8hk92jsnge46utq5iiuqp0vh9sun7u85.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.astrokundli.vxmjqa",
+            "certificate_hash": "66eb152533fced12f24cc7880d90f300abe98dcd"
+          }
+        },
+        {
+          "client_id": "442884132999-8tp3gejdp50ka29sqsei6l40jrmtn01e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwELt-GpI1pBgI3x9XPhxtDrQ-90miOVM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442884132999-8tp3gejdp50ka29sqsei6l40jrmtn01e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

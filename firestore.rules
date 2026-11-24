@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data) {
+      return data.id is string
+        && data.email is string
+        && data.displayName is string
+        && (!('photoUrl' in data) || data.photoUrl is string)
+        && data.preferredLanguage in ['en', 'hi']
+        && data.aiMemoryEnabled is bool
+        && (!('birthDate' in data) || data.birthDate is string)
+        && (!('birthTime' in data) || data.birthTime is string)
+        && (!('birthPlace' in data) || data.birthPlace is string)
+        && (!('latitude' in data) || data.latitude is number)
+        && (!('longitude' in data) || data.longitude is number)
+        && (!('timezoneOffset' in data) || data.timezoneOffset is number)
+        && (!('gender' in data) || data.gender is string)
+        && (!('isTimeApproximate' in data) || data.isTimeApproximate is bool);
+    }
+
+    function isValidKundliProfile(data, userId) {
+      return data.id is string
+        && data.userId == userId
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.birthDate is string
+        && data.birthTime is string
+        && data.birthPlace is string
+        && (!('latitude' in data) || data.latitude is number)
+        && (!('longitude' in data) || data.longitude is number)
+        && (!('timezoneOffset' in data) || data.timezoneOffset is number)
+        && (!('gender' in data) || data.gender is string)
+        && (!('isTimeApproximate' in data) || data.isTimeApproximate is bool)
+        && (!('relationship' in data) || data.relationship is string)
+        && (!('isPrimary' in data) || data.isPrimary is bool)
+        && (!('notes' in data) || data.notes is string);
+    }
+
+    function isValidChatMessage(data, userId) {
+      return data.id is string
+        && data.userId == userId
+        && data.sender in ['user', 'devi_priya']
+        && data.text is string && data.text.size() > 0 && data.text.size() <= 5000;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /kundli_profiles/{profileId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidKundliProfile(request.resource.data, userId);
+        allow delete: if isOwner(userId);
+      }
+
+      // Entitlements are written exclusively by the billing backend (Admin SDK)
+      // after Google Play server-side verification. Clients can only read them.
+      match /billing/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      match /entitlements/{entitlementId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      match /chat_messages/{messageId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidChatMessage(request.resource.data, userId);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Deny all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with language preferences and primary birth details for Kundli calculation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "preferredLanguage": { "type": "string" },
+        "aiMemoryEnabled": { "type": "boolean" },
+        "birthDate": { "type": "string" },
+        "birthTime": { "type": "string" },
+        "birthPlace": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "timezoneOffset": { "type": "number" },
+        "gender": { "type": "string" },
+        "isTimeApproximate": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "displayName", "preferredLanguage", "aiMemoryEnabled"]
+    },
+    "KundliProfile": {
+      "title": "KundliProfile",
+      "description": "Saved Vedic birth chart details for personalized Kundli calculations and consultations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "relationship": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "birthTime": { "type": "string" },
+        "birthPlace": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "timezoneOffset": { "type": "number" },
+        "gender": { "type": "string" },
+        "isTimeApproximate": { "type": "boolean" },
+        "isPrimary": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "birthDate", "birthTime", "birthPlace"]
+    },
+    "UserEntitlement": {
+      "title": "UserEntitlement",
+      "description": "User subscription plan and available AI consultation credits",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "currentPlan": { "type": "string" },
+        "planExpiryMillis": { "type": "number" },
+        "chatMessagesRemaining": { "type": "number" },
+        "voiceMinutesRemaining": { "type": "number" },
+        "videoMinutesRemaining": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "currentPlan", "chatMessagesRemaining"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Personalized astrological chat consultation message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "sender": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "profileId": { "type": "string" }
+      },
+      "required": ["id", "userId", "sender", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile document owned exclusively by the authenticated user"
+    },
+    "/users/{userId}/kundli_profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/KundliProfile" },
+      "description": "Saved Kundli birth charts owned by the user"
+    },
+    "/users/{userId}/entitlements/{entitlementId}": {
+      "schema": { "$ref": "#/entities/UserEntitlement" },
+      "description": "User balance and entitlements doc"
+    },
+    "/users/{userId}/chat_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Astrology consultation messages between user and Devi Priya"
+    }
+  }
+}
