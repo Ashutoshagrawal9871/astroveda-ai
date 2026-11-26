@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.billing.PlayProductUiInfo
@@ -49,6 +50,7 @@ fun PlansBillingScreen(
     onRestorePurchases: () -> Unit = {},
     onRefreshHistory: () -> Unit = {},
     onManageSubscriptions: (sku: String?) -> Unit = {},
+    onGrantTestCredits: () -> Unit = {},
     onViewPolicy: () -> Unit,
     onBack: (() -> Unit)? = null
 ) {
@@ -192,13 +194,32 @@ fun PlansBillingScreen(
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, Color(0xFFEF4444))
                         ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(state.errorMessage, color = Color(0xFFFCA5A5), fontSize = 12.sp)
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text("Google Play Notice", color = Color(0xFFFCA5A5), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = state.errorMessage,
+                                    color = Color(0xFFFCA5A5),
+                                    fontSize = 12.sp,
+                                    lineHeight = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Button(
+                                    onClick = onGrantTestCredits,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = SacredSaffron,
+                                        contentColor = DeepCosmic
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Activate 10 Free Test Credits (Sideload / QA Mode)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -480,6 +501,47 @@ fun PlansBillingScreen(
                             modifier = Modifier.testTag("buy_payg_${pkg.id}")
                         ) {
                             Text("Buy $displayPrice", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Sideloaded / Testing Card
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = DarkCosmicSurfaceVariant),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderGold.copy(alpha = 0.4f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "🛠️ Sideload & Testing Controls",
+                            color = MysticGold,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "If testing outside Google Play Store where Play Billing is unavailable, tap below to add 10 complimentary AI questions.",
+                            color = TextSilver,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = onGrantTestCredits,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MysticGold),
+                            border = BorderStroke(1.dp, MysticGold),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("+10 Free Test Credits", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

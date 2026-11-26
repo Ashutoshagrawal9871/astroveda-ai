@@ -13,6 +13,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -118,6 +119,108 @@ object AuthManager {
             Log.e(TAG, "Google Sign-In failed", e)
             _authError.value = e.localizedMessage ?: "Sign-in failed. Please try again."
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Signs up a new user with Email and Password via Firebase Authentication.
+     * Bypasses Google Sign-In SHA-1 prerequisites for immediate registration on any device.
+     */
+    suspend fun signUpWithEmail(
+        email: String,
+        password: String,
+        displayName: String = ""
+    ): Result<FirebaseUser> = withContext(Dispatchers.IO) {
+        try {
+            _authError.value = null
+            val cleanEmail = email.trim()
+            val authResult = auth.createUserWithEmailAndPassword(cleanEmail, password).await()
+            val user = authResult.user
+            if (user != null) {
+                if (displayName.isNotBlank()) {
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(displayName.trim())
+                        .build()
+                    user.updateProfile(profileUpdates).await()
+                }
+                _currentUser.value = auth.currentUser
+                _isGuestMode.value = false
+                Log.i(TAG, "Email/Password sign up successful for: $cleanEmail")
+                Result.success(auth.currentUser ?: user)
+            } else {
+                val errorMsg = "Sign up returned null user"
+                _authError.value = errorMsg
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Sign up failed", e)
+            val friendlyMsg = when {
+                e.message?.contains("email address is already in use", ignoreCase = true) == true ->
+                    "This email is already registered. Please switch to the Log In tab."
+                e.message?.contains("badly formatted", ignoreCase = true) == true ->
+                    "Please enter a valid email address."
+                e.message?.contains("at least 6 characters", ignoreCase = true) == true ->
+                    "Password must be at least 6 characters."
+                else -> e.localizedMessage ?: "Sign up failed. Please check your credentials."
+            }
+            _authError.value = friendlyMsg
+            Result.failure(Exception(friendlyMsg, e))
+        }
+    }
+
+    /**
+     * Signs in an existing user with Email and Password.
+     */
+    suspend fun signInWithEmail(
+        email: String,
+        password: String
+    ): Result<FirebaseUser> = withContext(Dispatchers.IO) {
+        try {
+            _authError.value = null
+            val cleanEmail = email.trim()
+            val authResult = auth.signInWithEmailAndPassword(cleanEmail, password).await()
+            val user = authResult.user
+            if (user != null) {
+                _currentUser.value = user
+                _isGuestMode.value = false
+                Log.i(TAG, "Email/Password sign in successful for: $cleanEmail")
+                Result.success(user)
+            } else {
+                val errorMsg = "Sign in returned null user"
+                _authError.value = errorMsg
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Sign in failed", e)
+            val friendlyMsg = when {
+                e.message?.contains("no user record", ignoreCase = true) == true ||
+                e.message?.contains("user-not-found", ignoreCase = true) == true ->
+                    "No account found with this email. Please tap Sign Up to create one."
+                e.message?.contains("wrong-password", ignoreCase = true) == true ||
+                e.message?.contains("invalid-credential", ignoreCase = true) == true ->
+                    "Incorrect password or email. Please verify and try again."
+                e.message?.contains("badly formatted", ignoreCase = true) == true ->
+                    "Please enter a valid email address."
+                else -> e.localizedMessage ?: "Sign in failed. Please check your credentials."
+            }
+            _authError.value = friendlyMsg
+            Result.failure(Exception(friendlyMsg, e))
+        }
+    }
+
+    /**
+     * Sends password reset email.
+     */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            _authError.value = null
+            val cleanEmail = email.trim()
+            auth.sendPasswordResetEmail(cleanEmail).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            val friendlyMsg = e.localizedMessage ?: "Could not send reset email. Please try again."
+            _authError.value = friendlyMsg
+            Result.failure(Exception(friendlyMsg, e))
         }
     }
 

@@ -7,8 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.astro.VedicEngine
+import com.example.auth.AuthManager
 import com.example.ui.screens.*
 import com.example.ui.theme.*
 import com.example.viewmodel.AstroViewModel
@@ -95,6 +98,15 @@ fun MainAppContainer(viewModel: AstroViewModel = viewModel()) {
                         viewModel.signInWithGoogle(act)
                     }
                 },
+                onSignInWithEmail = { email, password ->
+                    viewModel.signInWithEmail(email, password)
+                },
+                onSignUpWithEmail = { email, password, name ->
+                    viewModel.signUpWithEmail(email, password, name)
+                },
+                onForgotPassword = { email ->
+                    viewModel.sendPasswordReset(email) { _, _ -> }
+                },
                 onContinueAsGuest = {
                     viewModel.continueAsGuest()
                 },
@@ -131,226 +143,249 @@ fun MainAppContainer(viewModel: AstroViewModel = viewModel()) {
         return
     }
 
-    if (isPlansScreenActive) {
-        PlansBillingScreen(
-            userBalance = userBalance,
-            playPurchaseState = playPurchaseState,
-            availablePlayProducts = availablePlayProducts,
-            purchaseHistory = purchaseHistory,
-            onPurchaseProduct = { productId ->
-                (context as? Activity)?.let { act ->
-                    viewModel.purchasePlayProduct(act, productId)
-                }
-            },
-            onRestorePurchases = { viewModel.restorePlayPurchases() },
-            onRefreshHistory = { viewModel.refreshPurchaseHistory() },
-            onManageSubscriptions = { sku ->
-                (context as? Activity)?.let { act ->
-                    viewModel.openManageSubscriptions(act, sku)
-                }
-            },
-            onViewPolicy = { isPolicyScreenActive = true },
-            onBack = { isPlansScreenActive = false }
-        )
-        return
-    }
-
-    // Main Scaffold with Bottom Navigation
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = DarkCosmicSurface,
-                contentColor = MysticGold,
-                windowInsets = WindowInsets.navigationBars,
-                modifier = Modifier.testTag("main_bottom_nav")
-            ) {
-                MainDestination.entries.forEach { destination ->
-                    val selected = currentDestination == destination
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { currentDestination = destination },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = destination.title,
-                                tint = if (selected) DeepCosmic else TextSilver
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = destination.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selected) MysticGold else TextMuted
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = DeepCosmic,
-                            indicatorColor = MysticGold,
-                            unselectedIconColor = TextSilver,
-                            unselectedTextColor = TextMuted,
-                            selectedTextColor = MysticGold
-                        ),
-                        modifier = Modifier.testTag(destination.testTag)
-                    )
-                }
-            }
-        },
-        containerColor = DeepCosmic
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when (currentDestination) {
-                MainDestination.TODAY -> {
-                    TodayScreen(
-                        currentProfile = currentProfile,
-                        allProfiles = allProfiles,
-                        repository = viewModel.astroRepository,
-                        language = language,
-                        chatCredits = userBalance.chatMessagesRemaining,
-                        onSelectProfile = { viewModel.selectProfile(it) },
-                        onAddNewProfile = { showNewProfileDialog = true },
-                        onNavigateToExplore = { currentDestination = MainDestination.EXPLORE },
-                        onNavigateToAskAi = { prompt ->
-                            pendingAskAiPrompt = prompt
-                            currentDestination = MainDestination.AI_ASTROLOGER
-                        },
-                        onNavigateToPlans = { isPlansScreenActive = true },
-                        onSaveReading = { title, cat, content -> viewModel.saveReading(title, cat, content) }
-                    )
-                }
-
-                MainDestination.KUNDLI -> {
-                    KundliScreen(
-                        currentProfile = currentProfile,
-                        onSaveProfile = { viewModel.saveProfile(it) },
-                        onNavigateToChat = { currentDestination = MainDestination.AI_ASTROLOGER }
-                    )
-                }
-
-                MainDestination.EXPLORE -> {
-                    AstrologyScreen(
-                        repository = viewModel.astroRepository,
-                        language = language
-                    )
-                }
-
-                MainDestination.AI_ASTROLOGER -> {
-                    AIAstrologerScreen(
-                        currentProfile = currentProfile,
-                        kundli = currentKundli,
-                        userBalance = userBalance,
-                        chatMessages = chatMessages,
-                        savedReadings = savedReadings,
-                        isSendingMessage = isSendingChat,
-                        onSendMessage = { viewModel.sendChatMessage(it) },
-                        onSaveReading = { title, cat, content -> viewModel.saveReading(title, cat, content) },
-                        onDeleteSavedReading = { viewModel.deleteSavedReading(it) },
-                        onNavigateToBilling = { isPlansScreenActive = true },
-                        playPurchaseState = playPurchaseState,
-                        availablePlayProducts = availablePlayProducts,
-                        onPurchasePlayProduct = { productId ->
-                            (context as? Activity)?.let { act ->
-                                viewModel.purchasePlayProduct(act, productId)
-                            }
-                        },
-                        onRestorePurchases = { viewModel.restorePlayPurchases() },
-                        initialPrompt = pendingAskAiPrompt,
-                        onClearInitialPrompt = { pendingAskAiPrompt = null }
-                    )
-                }
-
-                MainDestination.PROFILE -> {
-                    ProfilePrivacyScreen(
-                        profiles = allProfiles,
-                        currentProfile = currentProfile,
-                        onSelectProfile = { viewModel.selectProfile(it) },
-                        onDeleteProfile = { viewModel.deleteProfile(it) },
-                        onAddNewProfile = { showNewProfileDialog = true },
-                        onClearChatHistory = { viewModel.clearChatHistory() },
-                        onToggleAiMemory = { viewModel.setAiMemory(it) },
-                        onSetLanguage = { viewModel.setLanguage(it) },
-                        onViewPolicy = { isPolicyScreenActive = true },
-                        onNavigateToPlans = { isPlansScreenActive = true },
-                        userEmail = currentUser?.email,
-                        userDisplayName = currentUser?.displayName,
-                        isGuestMode = isGuestMode,
-                        onSignIn = {
-                            (context as? Activity)?.let { act ->
-                                viewModel.signInWithGoogle(act)
-                            }
-                        },
-                        onSignOut = { viewModel.signOut() },
-                        onDeleteAccount = {
-                            viewModel.deleteUserAccountAndData { success ->
-                                Toast.makeText(
-                                    context,
-                                    if (success) {
-                                        "Account and all associated data have been permanently deleted."
-                                    } else {
-                                        "Could not delete your account. Check your connection and try again, or email support@jyotishai.com."
-                                    },
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    )
-                }
-            }
-
-            if (showNewProfileDialog) {
-                BirthDetailsDialog(
-                    initial = null,
-                    onDismiss = { showNewProfileDialog = false },
-                    onSave = { newProfile ->
-                        viewModel.saveProfile(newProfile)
-                        showNewProfileDialog = false
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (isPlansScreenActive) {
+            PlansBillingScreen(
+                userBalance = userBalance,
+                playPurchaseState = playPurchaseState,
+                availablePlayProducts = availablePlayProducts,
+                purchaseHistory = purchaseHistory,
+                onPurchaseProduct = { productId ->
+                    (context as? Activity)?.let { act ->
+                        viewModel.purchasePlayProduct(act, productId)
                     }
-                )
-            }
+                },
+                onRestorePurchases = { viewModel.restorePlayPurchases() },
+                onRefreshHistory = { viewModel.refreshPurchaseHistory() },
+                onManageSubscriptions = { sku ->
+                    (context as? Activity)?.let { act ->
+                        viewModel.openManageSubscriptions(act, sku)
+                    }
+                },
+                onGrantTestCredits = { viewModel.grantTestCredits(10) },
+                onViewPolicy = { isPolicyScreenActive = true },
+                onBack = { isPlansScreenActive = false }
+            )
+        } else {
+            // Main Scaffold with Bottom Navigation
+            Scaffold(
+                bottomBar = {
+                    NavigationBar(
+                        containerColor = DarkCosmicSurface,
+                        contentColor = MysticGold,
+                        windowInsets = WindowInsets.navigationBars,
+                        modifier = Modifier.testTag("main_bottom_nav")
+                    ) {
+                        MainDestination.entries.forEach { destination ->
+                            val selected = currentDestination == destination
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { currentDestination = destination },
+                                icon = {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = destination.title,
+                                        tint = if (selected) DeepCosmic else TextSilver
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = destination.title,
+                                        fontSize = 10.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selected) MysticGold else TextMuted
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = DeepCosmic,
+                                    indicatorColor = MysticGold,
+                                    unselectedIconColor = TextSilver,
+                                    unselectedTextColor = TextMuted,
+                                    selectedTextColor = MysticGold
+                                ),
+                                modifier = Modifier.testTag(destination.testTag)
+                            )
+                        }
+                    }
+                },
+                containerColor = DeepCosmic
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    when (currentDestination) {
+                        MainDestination.TODAY -> {
+                            TodayScreen(
+                                currentProfile = currentProfile,
+                                allProfiles = allProfiles,
+                                repository = viewModel.astroRepository,
+                                language = language,
+                                chatCredits = userBalance.chatMessagesRemaining,
+                                onSelectProfile = { viewModel.selectProfile(it) },
+                                onAddNewProfile = { showNewProfileDialog = true },
+                                onNavigateToExplore = { currentDestination = MainDestination.EXPLORE },
+                                onNavigateToAskAi = { prompt ->
+                                    pendingAskAiPrompt = prompt
+                                    currentDestination = MainDestination.AI_ASTROLOGER
+                                },
+                                onNavigateToPlans = { isPlansScreenActive = true },
+                                onSaveReading = { title, cat, content -> viewModel.saveReading(title, cat, content) }
+                            )
+                        }
 
-            // Purchases are bound to the signed-in Google account, so guests sign in first.
-            if (requiresSignInForPurchase) {
-                AlertDialog(
-                    onDismissRequest = { viewModel.dismissPurchaseSignInPrompt() },
-                    title = {
-                        Text("Sign In to Purchase", color = MysticGold, fontWeight = FontWeight.Bold)
-                    },
-                    text = {
-                        Text(
-                            "Purchases are securely linked to your Google account so they can be restored on any device. Please sign in, then tap Buy again.",
-                            color = TextSilver,
-                            fontSize = 13.sp
+                        MainDestination.KUNDLI -> {
+                            KundliScreen(
+                                currentProfile = currentProfile,
+                                onSaveProfile = { viewModel.saveProfile(it) },
+                                onNavigateToChat = { currentDestination = MainDestination.AI_ASTROLOGER }
+                            )
+                        }
+
+                        MainDestination.EXPLORE -> {
+                            AstrologyScreen(
+                                repository = viewModel.astroRepository,
+                                language = language
+                            )
+                        }
+
+                        MainDestination.AI_ASTROLOGER -> {
+                            AIAstrologerScreen(
+                                currentProfile = currentProfile,
+                                kundli = currentKundli,
+                                userBalance = userBalance,
+                                chatMessages = chatMessages,
+                                savedReadings = savedReadings,
+                                isSendingMessage = isSendingChat,
+                                onSendMessage = { viewModel.sendChatMessage(it) },
+                                onSaveReading = { title, cat, content -> viewModel.saveReading(title, cat, content) },
+                                onDeleteSavedReading = { viewModel.deleteSavedReading(it) },
+                                onNavigateToBilling = { isPlansScreenActive = true },
+                                playPurchaseState = playPurchaseState,
+                                availablePlayProducts = availablePlayProducts,
+                                onPurchasePlayProduct = { productId ->
+                                    (context as? Activity)?.let { act ->
+                                        viewModel.purchasePlayProduct(act, productId)
+                                    }
+                                },
+                                onRestorePurchases = { viewModel.restorePlayPurchases() },
+                                initialPrompt = pendingAskAiPrompt,
+                                onClearInitialPrompt = { pendingAskAiPrompt = null }
+                            )
+                        }
+
+                        MainDestination.PROFILE -> {
+                            ProfilePrivacyScreen(
+                                profiles = allProfiles,
+                                currentProfile = currentProfile,
+                                onSelectProfile = { viewModel.selectProfile(it) },
+                                onDeleteProfile = { viewModel.deleteProfile(it) },
+                                onAddNewProfile = { showNewProfileDialog = true },
+                                onClearChatHistory = { viewModel.clearChatHistory() },
+                                onToggleAiMemory = { viewModel.setAiMemory(it) },
+                                onSetLanguage = { viewModel.setLanguage(it) },
+                                onViewPolicy = { isPolicyScreenActive = true },
+                                onNavigateToPlans = { isPlansScreenActive = true },
+                                userEmail = currentUser?.email,
+                                userDisplayName = currentUser?.displayName,
+                                isGuestMode = isGuestMode,
+                                onSignIn = {
+                                    AuthManager.exitGuestMode()
+                                },
+                                onSignOut = { viewModel.signOut() },
+                                onDeleteAccount = {
+                                    viewModel.deleteUserAccountAndData { success ->
+                                        Toast.makeText(
+                                            context,
+                                            if (success) {
+                                                "Account and all associated data have been permanently deleted."
+                                            } else {
+                                                "Could not delete your account. Check your connection and try again, or email support@jyotishai.com."
+                                            },
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    if (showNewProfileDialog) {
+                        BirthDetailsDialog(
+                            initial = null,
+                            onDismiss = { showNewProfileDialog = false },
+                            onSave = { newProfile ->
+                                viewModel.saveProfile(newProfile)
+                                showNewProfileDialog = false
+                            }
                         )
-                    },
-                    confirmButton = {
+                    }
+                }
+            }
+        }
+
+        // Purchases are bound to the signed-in account, so guests sign in or create account first.
+        if (requiresSignInForPurchase) {
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissPurchaseSignInPrompt() },
+                title = {
+                    Text("Account Required to Purchase", color = MysticGold, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                },
+                text = {
+                    Text(
+                        "Purchases and AI credits are securely linked to your account so they can be restored on any phone. Please log in or create an account to proceed.",
+                        color = TextSilver,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp
+                    )
+                },
+                confirmButton = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Button(
+                            onClick = {
+                                viewModel.dismissPurchaseSignInPrompt()
+                                AuthManager.exitGuestMode()
+                                isPlansScreenActive = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SacredSaffron,
+                                contentColor = DeepCosmic
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("sign_in_to_purchase_button")
+                        ) {
+                            Text("Log In / Sign Up", fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
                             onClick = {
                                 viewModel.dismissPurchaseSignInPrompt()
                                 (context as? Activity)?.let { act ->
                                     viewModel.signInWithGoogle(act)
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SacredSaffron,
-                                contentColor = DeepCosmic
-                            ),
-                            modifier = Modifier.testTag("sign_in_to_purchase_button")
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MysticGold),
+                            border = BorderStroke(1.dp, BorderGold),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Sign In with Google", fontWeight = FontWeight.Bold)
+                            Text("Continue with Google", fontWeight = FontWeight.SemiBold)
                         }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { viewModel.dismissPurchaseSignInPrompt() }) {
-                            Text("Not Now", color = TextSilver)
-                        }
-                    },
-                    containerColor = DarkCosmicSurface
-                )
-            }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.dismissPurchaseSignInPrompt() }) {
+                        Text("Not Now", color = TextSilver)
+                    }
+                },
+                containerColor = DarkCosmicSurface
+            )
         }
     }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -328,18 +329,21 @@ fun AIAstrologerScreen(
                                     if (isSendingMessage) {
                                         item {
                                             Card(
-                                                modifier = Modifier.fillMaxWidth(0.85f),
+                                                modifier = Modifier.fillMaxWidth(0.88f),
                                                 colors = CardDefaults.cardColors(containerColor = DarkCosmicCard),
-                                                shape = RoundedCornerShape(14.dp),
+                                                shape = RoundedCornerShape(16.dp),
                                                 border = BorderStroke(1.dp, BorderGold.copy(alpha = 0.5f))
                                             ) {
                                                 Row(
-                                                    modifier = Modifier.padding(12.dp),
+                                                    modifier = Modifier.padding(14.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MysticGold, strokeWidth = 2.dp)
-                                                    Spacer(modifier = Modifier.width(10.dp))
-                                                    Text("Devi Priya is consulting your birth chart...", color = TextGold, fontSize = 12.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MysticGold, strokeWidth = 2.5.dp)
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Column {
+                                                        Text("Devi Priya is consulting your birth chart...", color = MysticGold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                                        Text("Analyzing planetary alignments, Dasha periods & Vedic shastras", color = TextSilver, fontSize = 11.sp)
+                                                    }
                                                 }
                                             }
                                         }
@@ -350,61 +354,90 @@ fun AIAstrologerScreen(
 
                         // Bottom Fixed Message Input Field
                         Surface(
-                            color = DarkCosmicCard,
+                            color = DarkCosmicSurfaceVariant,
                             tonalElevation = 8.dp,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                OutlinedTextField(
-                                    value = inputText,
-                                    onValueChange = { inputText = it },
-                                    modifier = Modifier.weight(1f),
-                                    placeholder = { Text("Ask marriage, career, dasha remedies...", color = TextMuted, fontSize = 12.sp) },
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = MysticGold,
-                                        unfocusedBorderColor = BorderSubtle,
-                                        focusedContainerColor = DarkCosmicSurface,
-                                        unfocusedContainerColor = DarkCosmicSurface,
-                                        focusedTextColor = TextGold,
-                                        unfocusedTextColor = TextSilver
-                                    ),
-                                    shape = RoundedCornerShape(20.dp),
-                                    maxLines = 4
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = {
-                                        val text = inputText.trim()
-                                        if (text.isNotBlank()) {
-                                            if (userBalance.chatMessagesRemaining <= 0) {
-                                                showNoCreditsDialog = true
-                                            } else {
-                                                onSendMessage(text)
-                                                inputText = ""
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedTextField(
+                                        value = inputText,
+                                        onValueChange = { inputText = it },
+                                        modifier = Modifier.weight(1f),
+                                        placeholder = {
+                                            Text(
+                                                "Ask marriage timing, career, dasha remedies...",
+                                                color = TextMuted,
+                                                fontSize = 12.sp
+                                            )
+                                        },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = MysticGold,
+                                            unfocusedBorderColor = BorderSubtle,
+                                            focusedContainerColor = DarkCosmicSurface,
+                                            unfocusedContainerColor = DarkCosmicSurface,
+                                            focusedTextColor = TextGold,
+                                            unfocusedTextColor = TextSilver
+                                        ),
+                                        shape = RoundedCornerShape(24.dp),
+                                        maxLines = 4,
+                                        trailingIcon = {
+                                            if (inputText.isNotBlank()) {
+                                                IconButton(onClick = { inputText = "" }) {
+                                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextSilver, modifier = Modifier.size(18.dp))
+                                                }
                                             }
                                         }
-                                    },
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .background(
-                                            brush = Brush.linearGradient(listOf(SacredSaffron, SaffronOrange)),
-                                            shape = CircleShape
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    val hasInput = inputText.trim().isNotBlank()
+                                    IconButton(
+                                        onClick = {
+                                            val text = inputText.trim()
+                                            if (text.isNotBlank()) {
+                                                if (userBalance.chatMessagesRemaining <= 0) {
+                                                    showNoCreditsDialog = true
+                                                } else {
+                                                    onSendMessage(text)
+                                                    inputText = ""
+                                                }
+                                            }
+                                        },
+                                        enabled = hasInput && !isSendingMessage,
+                                        modifier = Modifier
+                                            .size(46.dp)
+                                            .background(
+                                                brush = if (hasInput) Brush.linearGradient(listOf(SacredSaffron, SaffronOrange))
+                                                else Brush.linearGradient(listOf(DarkCosmicCard, DarkCosmicSurface)),
+                                                shape = CircleShape
+                                            )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Send,
+                                            contentDescription = "Send",
+                                            tint = if (hasInput) DeepCosmic else TextMuted,
+                                            modifier = Modifier.size(20.dp)
                                         )
-                                ) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = DeepCosmic, modifier = Modifier.size(20.dp))
+                                    }
                                 }
+
+                                Text(
+                                    text = "Interpretive Vedic guidance provided by AI. Not a replacement for professional legal, medical, or financial advice.",
+                                    color = TextMuted,
+                                    fontSize = 9.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                )
                             }
-                            Text(
-                                text = "Interpretive Vedic guidance provided by AI. Not a replacement for professional legal, medical, or financial advice.",
-                                color = TextMuted,
-                                fontSize = 9.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
                         }
                     }
                 }
@@ -599,9 +632,9 @@ private fun ChatMessageBubble(
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(if (isUser) 0.82f else 0.92f),
+            modifier = Modifier.fillMaxWidth(if (isUser) 0.85f else 0.94f),
             colors = CardDefaults.cardColors(
-                containerColor = if (isUser) DarkCosmicSurfaceVariant else DarkCosmicCard
+                containerColor = if (isUser) Color(0xFF24190B) else DarkCosmicCard
             ),
             shape = RoundedCornerShape(
                 topStart = 16.dp,
@@ -611,10 +644,10 @@ private fun ChatMessageBubble(
             ),
             border = BorderStroke(
                 1.dp,
-                if (isUser) BorderGold.copy(alpha = 0.5f) else BorderGold
+                if (isUser) SacredSaffron.copy(alpha = 0.5f) else BorderGold.copy(alpha = 0.6f)
             )
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 if (!isUser) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -622,28 +655,65 @@ private fun ChatMessageBubble(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MysticGold, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Devi Priya", color = MysticGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(SacredSaffron.copy(alpha = 0.25f))
+                                    .border(1.dp, MysticGold, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MysticGold,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Devi Priya",
+                                color = MysticGold,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                color = NebulaTeal.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "VEDIC AI",
+                                    color = NebulaTeal,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
+                            }
                         }
                         Text(dateStr, color = TextMuted, fontSize = 10.sp)
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Text(
                     text = message.text,
-                    color = if (isUser) TextGold else TextSilver,
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp
+                    color = if (isUser) Color(0xFFFFF7ED) else TextSilver,
+                    fontSize = 13.5.sp,
+                    lineHeight = 20.sp
                 )
 
                 if (isUser) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(dateStr, color = TextMuted, fontSize = 10.sp, modifier = Modifier.align(Alignment.End))
+                    Text(
+                        text = dateStr,
+                        color = TextMuted,
+                        fontSize = 10.sp,
+                        modifier = Modifier.align(Alignment.End)
+                    )
                 } else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(color = BorderSubtle)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = BorderSubtle.copy(alpha = 0.6f))
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Row(
@@ -651,21 +721,42 @@ private fun ChatMessageBubble(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = onCopy, contentPadding = PaddingValues(0.dp)) {
-                                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copy", tint = TextSilver, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Copy", color = TextSilver, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Surface(
+                                color = DarkCosmicSurface,
+                                shape = RoundedCornerShape(6.dp),
+                                border = BorderStroke(0.5.dp, BorderSubtle),
+                                modifier = Modifier.clickable { onCopy() }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = null, tint = TextSilver, modifier = Modifier.size(13.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Copy", color = TextSilver, fontSize = 11.sp)
+                                }
                             }
-                            TextButton(onClick = onSave, contentPadding = PaddingValues(0.dp)) {
-                                Icon(imageVector = Icons.Default.Star, contentDescription = "Save", tint = MysticGold, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Save", color = MysticGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+
+                            Surface(
+                                color = SacredSaffron.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp),
+                                border = BorderStroke(0.5.dp, SacredSaffron.copy(alpha = 0.5f)),
+                                modifier = Modifier.clickable { onSave() }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Star, contentDescription = null, tint = MysticGold, modifier = Modifier.size(13.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Save Reading", color = MysticGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
 
-                        IconButton(onClick = onReport, modifier = Modifier.size(24.dp)) {
-                            Icon(imageVector = Icons.Default.Flag, contentDescription = "Report", tint = TextMuted, modifier = Modifier.size(14.dp))
+                        IconButton(onClick = onReport, modifier = Modifier.size(26.dp)) {
+                            Icon(Icons.Default.Flag, contentDescription = "Report", tint = TextMuted, modifier = Modifier.size(14.dp))
                         }
                     }
                 }

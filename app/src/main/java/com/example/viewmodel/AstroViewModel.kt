@@ -121,6 +121,60 @@ class AstroViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun signUpWithEmail(
+        email: String,
+        password: String,
+        displayName: String,
+        onComplete: ((Boolean) -> Unit)? = null
+    ) {
+        viewModelScope.launch {
+            _isSigningIn.value = true
+            val result = AuthManager.signUpWithEmail(email, password, displayName)
+            _isSigningIn.value = false
+            if (result.isSuccess) {
+                result.getOrNull()?.let { syncUserProfileToCloud(it) }
+                onComplete?.invoke(true)
+            } else {
+                onComplete?.invoke(false)
+            }
+        }
+    }
+
+    fun signInWithEmail(
+        email: String,
+        password: String,
+        onComplete: ((Boolean) -> Unit)? = null
+    ) {
+        viewModelScope.launch {
+            _isSigningIn.value = true
+            val result = AuthManager.signInWithEmail(email, password)
+            _isSigningIn.value = false
+            if (result.isSuccess) {
+                result.getOrNull()?.let { syncUserProfileToCloud(it) }
+                onComplete?.invoke(true)
+            } else {
+                onComplete?.invoke(false)
+            }
+        }
+    }
+
+    fun sendPasswordReset(email: String, onComplete: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val result = AuthManager.sendPasswordResetEmail(email)
+            if (result.isSuccess) {
+                onComplete(true, "Password reset link sent to your email!")
+            } else {
+                onComplete(false, result.exceptionOrNull()?.message ?: "Failed to send reset email.")
+            }
+        }
+    }
+
+    fun grantTestCredits(amount: Int = 10) {
+        viewModelScope.launch {
+            repository.addChatCredits(amount)
+        }
+    }
+
     fun signOut() {
         AuthManager.signOut()
     }
