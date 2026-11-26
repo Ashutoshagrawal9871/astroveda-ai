@@ -190,35 +190,24 @@ fun PlansBillingScreen(
                     is PlayPurchaseState.Failed -> {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF3B0B0B)),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2A1A)),
                             shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, Color(0xFFEF4444))
+                            border = BorderStroke(1.dp, Color(0xFF4CAF50))
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text("Google Play Notice", color = Color(0xFFFCA5A5), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = state.errorMessage,
-                                    color = Color(0xFFFCA5A5),
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Button(
-                                    onClick = onGrantTestCredits,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = SacredSaffron,
-                                        contentColor = DeepCosmic
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Activate 10 Free Test Credits (Sideload / QA Mode)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.CloudSync, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text("Google Play Loading…", color = Color(0xFFA5D6A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = "Subscription prices are being fetched from Google Play. Please ensure you are connected to the internet and try again shortly.",
+                                        color = Color(0xFF81C784),
+                                        fontSize = 11.sp,
+                                        lineHeight = 15.sp
+                                    )
                                 }
                             }
                         }
@@ -506,42 +495,44 @@ fun PlansBillingScreen(
                 }
             }
 
-            // Sideloaded / Testing Card
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = DarkCosmicSurfaceVariant),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, BorderGold.copy(alpha = 0.4f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+            // Sideloaded / Testing Card — only shown in DEBUG builds, never in release
+            if (com.example.BuildConfig.DEBUG) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = DarkCosmicSurfaceVariant),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, BorderGold.copy(alpha = 0.4f))
                     ) {
-                        Text(
-                            text = "🛠️ Sideload & Testing Controls",
-                            color = MysticGold,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "If testing outside Google Play Store where Play Billing is unavailable, tap below to add 10 complimentary AI questions.",
-                            color = TextSilver,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedButton(
-                            onClick = onGrantTestCredits,
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MysticGold),
-                            border = BorderStroke(1.dp, MysticGold),
-                            shape = RoundedCornerShape(8.dp)
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("+10 Free Test Credits", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "🛠️ DEBUG: Sideload & Testing Controls",
+                                color = MysticGold,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Internal QA mode only. This section is hidden in production release builds.",
+                                color = TextSilver,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = onGrantTestCredits,
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MysticGold),
+                                border = BorderStroke(1.dp, MysticGold),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("+10 Free Test Credits (DEBUG ONLY)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
