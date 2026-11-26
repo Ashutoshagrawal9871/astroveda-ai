@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "442884132999-etpta2n3nobg7ugi9qrsnla88ml7pk5l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.astrokundli.vxmjqa",
+            "certificate_hash": "a87de19330aaf1d6a443218b5378096227effc45"
+          }
+        },
+        {
           "client_id": "442884132999-8tp3gejdp50ka29sqsei6l40jrmtn01e.apps.googleusercontent.com",
           "client_type": 3
         }
